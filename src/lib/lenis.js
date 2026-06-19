@@ -1,6 +1,8 @@
 import Lenis from 'lenis';
 
 let lenisInstance = null;
+let scrollProgress = 0;
+const listeners = new Set();
 
 export function initLenis() {
   if (lenisInstance) return lenisInstance;
@@ -16,14 +18,27 @@ export function initLenis() {
     touchMultiplier: 1.5,
   });
 
+  lenisInstance.on('scroll', (e) => {
+    scrollProgress = e.progress || 0;
+    listeners.forEach((fn) => fn(scrollProgress));
+  });
+
   function raf(time) {
     lenisInstance.raf(time);
     requestAnimationFrame(raf);
   }
 
   requestAnimationFrame(raf);
-
   return lenisInstance;
+}
+
+export function onScrollProgress(fn) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+export function getScrollProgress() {
+  return scrollProgress;
 }
 
 export function getLenis() {

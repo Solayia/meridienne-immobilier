@@ -1,5 +1,6 @@
 /**
  * CTA overlay — estimation form. Active during progress 0.85 → 1.0.
+ * pointer-events only active when form is visible.
  */
 export default function CtaOverlay({ sectionProgress = 0 }) {
   const opacity =
@@ -7,11 +8,15 @@ export default function CtaOverlay({ sectionProgress = 0 }) {
       ? sectionProgress / 0.15
       : 1;
 
-  if (opacity <= 0) return null;
+  if (opacity <= 0.01) return null;
+
+  const isActive = sectionProgress > 0.1;
 
   return (
     <div
-      className="pointer-events-auto fixed inset-0 z-10 flex items-center justify-center"
+      className={`fixed inset-0 z-10 flex items-center justify-center ${
+        isActive ? 'pointer-events-auto' : 'pointer-events-none'
+      }`}
       style={{ opacity }}
     >
       <div className="mx-auto max-w-2xl px-6 text-center">

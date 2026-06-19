@@ -2,8 +2,7 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 
 /**
- * Procedural arch geometry — a semicircular opening cut from a rectangular wall.
- * Built from merged box + half-torus for the curve.
+ * Procedural arch — rectangular wall with a semicircular opening.
  */
 export default function Arch({
   width = 3,
@@ -16,26 +15,37 @@ export default function Arch({
   const geometry = useMemo(() => {
     const shape = new THREE.Shape();
     const hw = width / 2;
-    const r = archRadius;
+    const r = Math.min(archRadius, hw);
+    const archTop = height - r - 0.5;
 
-    // Outer rectangle
+    // Outer wall (clockwise)
     shape.moveTo(-hw, 0);
     shape.lineTo(-hw, height);
     shape.lineTo(hw, height);
     shape.lineTo(hw, 0);
-    shape.lineTo(-hw, 0);
+    shape.closePath();
 
-    // Inner arch hole
+    // Inner arch hole (counter-clockwise for correct subtraction)
     const hole = new THREE.Path();
     hole.moveTo(-r, 0);
-    hole.lineTo(-r, height - r - 1);
-    hole.absarc(0, height - r - 1, r, Math.PI, 0, true);
+    hole.lineTo(-r, archTop);
+    // Semicircle from left to right (PI → 0, counter-clockwise = false)
+    const segments = 24;
+    for (let i = 0; i <= segments; i++) {
+      const angle = Math.PI - (i / segments) * Math.PI;
+      hole.lineTo(
+        Math.cos(angle) * r,
+        archTop + Math.sin(angle) * r,
+      );
+    }
     hole.lineTo(r, 0);
-    hole.lineTo(-r, 0);
+    hole.closePath();
     shape.holes.push(hole);
 
-    const extrudeSettings = { depth, bevelEnabled: false };
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    return new THREE.ExtrudeGeometry(shape, {
+      depth,
+      bevelEnabled: false,
+    });
   }, [width, height, depth, archRadius]);
 
   return (

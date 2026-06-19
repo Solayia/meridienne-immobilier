@@ -1,15 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
+export default function Navbar({ progress = 0 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
+  const scrolled = progress > 0.02;
   const closeMobile = () => setMobileOpen(false);
 
   return (

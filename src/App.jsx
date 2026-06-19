@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { initLenis } from './lib/lenis';
+import { initLenis, onScrollProgress } from './lib/lenis';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { useSectionProgress } from './hooks/useSectionProgress';
 import Scene from './canvas/Scene';
@@ -13,9 +13,6 @@ import QuartiersOverlay from './dom/QuartiersOverlay';
 import CtaOverlay from './dom/CtaOverlay';
 import Footer from './dom/Footer';
 
-/**
- * Fallback DOM-only site when WebGL is not available.
- */
 function DomFallback() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-cream px-6">
@@ -37,13 +34,10 @@ function DomFallback() {
   );
 }
 
-/**
- * Detects if WebGL is supported.
- */
 function supportsWebGL() {
   try {
-    const canvas = document.createElement('canvas');
-    return !!(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') || c.getContext('webgl'));
   } catch {
     return false;
   }
@@ -51,38 +45,32 @@ function supportsWebGL() {
 
 export default function App() {
   const [progress, setProgress] = useState(0);
-  const [webglSupported, setWebglSupported] = useState(true);
+  const [webglOk, setWebglOk] = useState(true);
   const reducedMotion = useReducedMotion();
 
-  // Section progress helpers
-  const heroProgress = useSectionProgress(progress, 0, 0.15);
-  const biensProgress = useSectionProgress(progress, 0.15, 0.40);
-  const statsProgress = useSectionProgress(progress, 0.40, 0.55);
-  const agenceProgress = useSectionProgress(progress, 0.55, 0.70);
-  const quartiersProgress = useSectionProgress(progress, 0.70, 0.85);
-  const ctaProgress = useSectionProgress(progress, 0.85, 1.0);
+  const heroP = useSectionProgress(progress, 0, 0.15);
+  const biensP = useSectionProgress(progress, 0.15, 0.40);
+  const statsP = useSectionProgress(progress, 0.40, 0.55);
+  const agenceP = useSectionProgress(progress, 0.55, 0.70);
+  const quartiersP = useSectionProgress(progress, 0.70, 0.85);
+  const ctaP = useSectionProgress(progress, 0.85, 1.0);
 
-  const handleScroll = useCallback(({ progress: p }) => {
-    setProgress(p);
+  useEffect(() => {
+    setWebglOk(supportsWebGL());
   }, []);
 
   useEffect(() => {
-    setWebglSupported(supportsWebGL());
-  }, []);
+    if (!webglOk || reducedMotion) return;
 
-  useEffect(() => {
-    if (!webglSupported) return;
+    initLenis();
+    const unsub = onScrollProgress((p) => setProgress(p));
+    return unsub;
+  }, [webglOk, reducedMotion]);
 
-    const lenis = initLenis();
-    lenis.on('scroll', handleScroll);
-
-    return () => lenis.off('scroll', handleScroll);
-  }, [handleScroll, webglSupported]);
-
-  if (!webglSupported || reducedMotion) {
+  if (!webglOk || reducedMotion) {
     return (
       <>
-        <Navbar />
+        <Navbar progress={0} />
         <DomFallback />
         <Footer />
       </>
@@ -91,14 +79,14 @@ export default function App() {
 
   return (
     <>
-      {/* Scrollable height — drives Lenis progress */}
+      {/* Scroll height — drives Lenis 0→1 progress */}
       <div className="h-[800vh]" aria-hidden="true" />
 
-      {/* Fixed WebGL canvas */}
+      {/* WebGL canvas — fixed fullscreen */}
       <div className="fixed inset-0 z-0">
         <Canvas
           dpr={[1, Math.min(window.devicePixelRatio, 2)]}
-          camera={{ fov: 50, near: 0.1, far: 100, position: [0, 8, 12] }}
+          camera={{ fov: 50, near: 0.1, far: 150, position: [0, 8, 12] }}
           gl={{ antialias: true, alpha: false }}
         >
           <color attach="background" args={['#F5F0EB']} />
@@ -108,26 +96,26 @@ export default function App() {
         </Canvas>
       </div>
 
-      {/* DOM overlays */}
-      <Navbar />
+      {/* DOM overlays on top */}
+      <Navbar progress={progress} />
       <HeroOverlay progress={progress} />
-      <BiensOverlay sectionProgress={biensProgress} />
-      <StatsOverlay sectionProgress={statsProgress} />
-      <AgenceOverlay sectionProgress={agenceProgress} />
-      <QuartiersOverlay sectionProgress={quartiersProgress} />
-      <CtaOverlay sectionProgress={ctaProgress} />
+      <BiensOverlay sectionProgress={biensP} />
+      <StatsOverlay sectionProgress={statsP} />
+      <AgenceOverlay sectionProgress={agenceP} />
+      <QuartiersOverlay sectionProgress={quartiersP} />
+      <CtaOverlay sectionProgress={ctaP} />
 
-      {/* Footer at the bottom */}
+      {/* Footer in flow */}
       <div className="relative z-20">
         <Footer />
       </div>
 
-      {/* Hidden anchors for accessibility */}
-      <div className="sr-only" aria-hidden="false">
-        <div id="biens" />
-        <div id="agence" />
-        <div id="quartiers" />
-        <div id="estimer" />
+      {/* Accessibility anchors */}
+      <div className="sr-only">
+        <span id="biens" />
+        <span id="agence" />
+        <span id="quartiers" />
+        <span id="estimer" />
       </div>
     </>
   );
