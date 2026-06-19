@@ -1,67 +1,83 @@
 import Arch from '../geometry/Arch';
-import Column from '../geometry/Column';
-import Staircase from '../geometry/Staircase';
 
 /**
- * Hero scene — geometric rooftops, entry arch, columns.
- * Positioned at z=0 (start of the camera path).
+ * Hero — elegant architectural composition.
+ * Central arch, terracotta monoliths, reflective floor.
  */
 export default function HeroScene() {
   return (
     <group position={[0, 0, 0]}>
-      {/* Ground plane */}
+      {/* Reflective ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <planeGeometry args={[40, 60]} />
-        <meshStandardMaterial color="#F5F0EB" roughness={0.9} />
+        <planeGeometry args={[50, 80]} />
+        <meshPhysicalMaterial
+          color="#F0EBE4"
+          roughness={0.3}
+          metalness={0.05}
+          clearcoat={0.4}
+          clearcoatRoughness={0.3}
+        />
       </mesh>
 
-      {/* Main entry arch */}
+      {/* Central monumental arch */}
       <Arch
         position={[0, 0, -2]}
-        width={4}
-        height={5.5}
-        archRadius={1.5}
+        width={5}
+        height={6}
+        archRadius={1.8}
         color="#F5F0EB"
       />
 
-      {/* Side columns */}
-      <Column position={[-3.5, 0, 0]} height={5} color="#E8E0D8" />
-      <Column position={[3.5, 0, 0]} height={5} color="#E8E0D8" />
-      <Column position={[-3.5, 0, -4]} height={5} color="#E8E0D8" />
-      <Column position={[3.5, 0, -4]} height={5} color="#E8E0D8" />
-
-      {/* Geometric rooftop blocks — terracotta accents */}
-      <mesh position={[-5, 2.5, 2]}>
-        <boxGeometry args={[3, 5, 3]} />
-        <meshStandardMaterial color="#C4653A" roughness={0.8} />
-      </mesh>
-      <mesh position={[6, 1.5, 3]}>
-        <boxGeometry args={[2.5, 3, 2.5]} />
-        <meshStandardMaterial color="#C4653A" roughness={0.8} />
-      </mesh>
-      <mesh position={[-6, 1, 5]}>
-        <boxGeometry args={[2, 2, 2]} />
-        <meshStandardMaterial color="#A8522E" roughness={0.8} />
-      </mesh>
-      <mesh position={[4, 3, 6]}>
-        <boxGeometry args={[1.5, 6, 2]} />
-        <meshStandardMaterial color="#C4653A" roughness={0.75} />
+      {/* Terracotta monolith — tall, thin slab (left) */}
+      <mesh position={[-5.5, 3, 1]}>
+        <boxGeometry args={[0.5, 6, 1.5]} />
+        <meshPhysicalMaterial
+          color="#C4653A"
+          roughness={0.6}
+          metalness={0.08}
+          clearcoat={0.2}
+        />
       </mesh>
 
-      {/* Low walls */}
-      <mesh position={[-2, 0.5, 4]}>
-        <boxGeometry args={[6, 1, 0.3]} />
-        <meshStandardMaterial color="#E8E0D8" roughness={0.85} />
+      {/* Shorter slab (right) */}
+      <mesh position={[6, 2, 2.5]}>
+        <boxGeometry args={[0.4, 4, 1.2]} />
+        <meshPhysicalMaterial
+          color="#C4653A"
+          roughness={0.65}
+          metalness={0.05}
+        />
       </mesh>
 
-      {/* Decorative staircase */}
-      <Staircase
-        position={[5, 0, -1]}
-        rotation={[0, -Math.PI / 4, 0]}
-        steps={5}
-        stepWidth={1.5}
-        color="#E8E0D8"
-      />
+      {/* Low horizontal volume — sand */}
+      <mesh position={[-3, 0.4, 4]}>
+        <boxGeometry args={[4, 0.8, 0.4]} />
+        <meshPhysicalMaterial
+          color="#E8E0D8"
+          roughness={0.7}
+          metalness={0.03}
+        />
+      </mesh>
+
+      {/* Accent cube — darker terracotta, recessed */}
+      <mesh position={[4.5, 0.6, 5]}>
+        <boxGeometry args={[1.2, 1.2, 1.2]} />
+        <meshPhysicalMaterial
+          color="#A8522E"
+          roughness={0.55}
+          metalness={0.1}
+        />
+      </mesh>
+
+      {/* Thin vertical line — visual rhythm */}
+      <mesh position={[-7, 2.5, 3]}>
+        <boxGeometry args={[0.08, 5, 0.08]} />
+        <meshPhysicalMaterial color="#C4653A" roughness={0.4} metalness={0.2} />
+      </mesh>
+      <mesh position={[8, 1.5, 4]}>
+        <boxGeometry args={[0.08, 3, 0.08]} />
+        <meshPhysicalMaterial color="#C4653A" roughness={0.4} metalness={0.2} />
+      </mesh>
     </group>
   );
 }
