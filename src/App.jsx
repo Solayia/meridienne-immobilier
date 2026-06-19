@@ -5,11 +5,7 @@ import { useReducedMotion } from './hooks/useReducedMotion';
 import { useSectionProgress } from './hooks/useSectionProgress';
 import Scene from './canvas/Scene';
 import Navbar from './dom/Navbar';
-import HeroOverlay from './dom/HeroOverlay';
-import BiensOverlay from './dom/BiensOverlay';
-import StatsOverlay from './dom/StatsOverlay';
-import AgenceOverlay from './dom/AgenceOverlay';
-import QuartiersOverlay from './dom/QuartiersOverlay';
+import WelcomeOverlay from './dom/WelcomeOverlay';
 import CtaOverlay from './dom/CtaOverlay';
 import Footer from './dom/Footer';
 
@@ -48,12 +44,9 @@ export default function App() {
   const [webglOk, setWebglOk] = useState(true);
   const reducedMotion = useReducedMotion();
 
-  const heroP = useSectionProgress(progress, 0, 0.15);
-  const biensP = useSectionProgress(progress, 0.15, 0.40);
-  const statsP = useSectionProgress(progress, 0.40, 0.55);
-  const agenceP = useSectionProgress(progress, 0.55, 0.70);
-  const quartiersP = useSectionProgress(progress, 0.70, 0.85);
-  const ctaP = useSectionProgress(progress, 0.85, 1.0);
+  // Sections: Welcome (0-10%), Showroom (10-70%), Stats (70-82%), CTA (82-100%)
+  const welcomeP = useSectionProgress(progress, 0, 0.10);
+  const ctaP = useSectionProgress(progress, 0.82, 1.0);
 
   useEffect(() => {
     setWebglOk(supportsWebGL());
@@ -61,7 +54,6 @@ export default function App() {
 
   useEffect(() => {
     if (!webglOk || reducedMotion) return;
-
     initLenis();
     const unsub = onScrollProgress((p) => setProgress(p));
     return unsub;
@@ -79,14 +71,14 @@ export default function App() {
 
   return (
     <>
-      {/* Scroll height — drives Lenis 0→1 progress */}
+      {/* Scroll height */}
       <div className="h-[800vh]" aria-hidden="true" />
 
-      {/* WebGL canvas — fixed fullscreen */}
+      {/* WebGL canvas */}
       <div className="fixed inset-0 z-0">
         <Canvas
           dpr={[1, Math.min(window.devicePixelRatio, 2)]}
-          camera={{ fov: 50, near: 0.1, far: 150, position: [0, 8, 12] }}
+          camera={{ fov: 50, near: 0.1, far: 80, position: [0, 2.5, 14] }}
           gl={{ antialias: true, alpha: false }}
         >
           <color attach="background" args={['#F5F0EB']} />
@@ -96,25 +88,26 @@ export default function App() {
         </Canvas>
       </div>
 
-      {/* DOM overlays on top */}
+      {/* DOM overlays — minimal, let the 3D speak */}
       <Navbar progress={progress} />
-      <HeroOverlay progress={progress} />
-      <BiensOverlay sectionProgress={biensP} />
-      <StatsOverlay sectionProgress={statsP} />
-      <AgenceOverlay sectionProgress={agenceP} />
-      <QuartiersOverlay sectionProgress={quartiersP} />
+      <WelcomeOverlay progress={welcomeP} />
       <CtaOverlay sectionProgress={ctaP} />
 
-      {/* Footer in flow */}
+      {/* Scroll hint */}
+      {progress < 0.03 && (
+        <div className="pointer-events-none fixed bottom-8 left-1/2 z-10 -translate-x-1/2">
+          <p className="animate-pulse text-xs uppercase tracking-[0.2em] text-ink/30">
+            Scrollez pour entrer
+          </p>
+        </div>
+      )}
+
       <div className="relative z-20">
         <Footer />
       </div>
 
-      {/* Accessibility anchors */}
       <div className="sr-only">
         <span id="biens" />
-        <span id="agence" />
-        <span id="quartiers" />
         <span id="estimer" />
       </div>
     </>

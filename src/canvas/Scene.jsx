@@ -1,54 +1,45 @@
 import { Suspense } from 'react';
 import { Environment } from '@react-three/drei';
 import CameraRig from './CameraRig';
-import HeroScene from './sections/HeroScene';
-import GalleryScene from './sections/GalleryScene';
-import StatsScene from './sections/StatsScene';
-import ArchScene from './sections/ArchScene';
-import QuartiersScene from './sections/QuartiersScene';
+import ShowroomScene from './sections/ShowroomScene';
+import StatsZone from './sections/StatsZone';
 import PostEffects from './effects/PostEffects';
 
 /**
- * Main 3D scene — environment-lit, warm architectural mood.
+ * Main scene — luxury real estate showroom.
+ * One cohesive space: entrance → gallery → stats wall.
  */
 export default function Scene({ progress = 0, reducedMotion = false }) {
   return (
     <>
       <CameraRig progress={progress} reducedMotion={reducedMotion} />
 
-      {/* Key light — warm, from upper-right */}
+      {/* Ambient — soft warm base */}
+      <ambientLight intensity={0.3} color="#FFF8F0" />
+
+      {/* Key light — simulates skylight from above */}
       <directionalLight
-        position={[10, 15, 8]}
-        intensity={2.5}
-        color="#FFEEDD"
-      />
-      {/* Fill — softer, from left */}
-      <directionalLight
-        position={[-6, 8, -4]}
-        intensity={0.6}
-        color="#E8E0D8"
-      />
-      {/* Back fill — for deep scenes */}
-      <directionalLight
-        position={[0, 6, -45]}
-        intensity={1.2}
+        position={[2, 10, 4]}
+        intensity={1.5}
         color="#FFF5E8"
       />
-      {/* Ambient — low, warm */}
-      <ambientLight intensity={0.35} color="#FFF5E8" />
 
-      {/* Fog — gentle depth, doesn't kill back scenes */}
-      <fog attach="fog" args={['#F5F0EB', 30, 90]} />
+      {/* Fill from entrance */}
+      <directionalLight
+        position={[0, 4, 12]}
+        intensity={0.6}
+        color="#F5F0EB"
+      />
 
-      {/* Environment — subtle reflections on physical materials */}
-      <Environment preset="apartment" environmentIntensity={0.2} />
+      {/* Gentle fog — gives depth without killing visibility */}
+      <fog attach="fog" args={['#F5F0EB', 18, 50]} />
+
+      {/* Environment for physical material reflections */}
+      <Environment preset="apartment" environmentIntensity={0.15} />
 
       <Suspense fallback={null}>
-        <HeroScene />
-        <GalleryScene />
-        <StatsScene />
-        <ArchScene />
-        <QuartiersScene />
+        <ShowroomScene />
+        <StatsZone />
       </Suspense>
 
       <PostEffects enabled={!reducedMotion} />

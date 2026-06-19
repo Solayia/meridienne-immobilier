@@ -3,40 +3,44 @@ import { useRef } from 'react';
 import * as THREE from 'three';
 
 /**
- * Drives the camera along a path based on scroll progress (0→1).
- * Uses smooth interpolation (lerp) for cinematic feel.
+ * Camera path through the luxury showroom.
+ *
+ * 0-10%   : Outside → approach the agency entrance
+ * 10-25%  : Enter → pass first property (left wall)
+ * 25-40%  : Pause on property 2 (right wall)
+ * 40-55%  : Move to property 3 (left wall, deeper)
+ * 55-70%  : Property 4 (center, large)
+ * 70-82%  : Pull back slightly → stats moment
+ * 82-100% : Settle → CTA zone
  */
-
-const CAMERA_PATH = [
-  // [progress, position, lookAt]
-  { at: 0.0, pos: [0, 8, 12], look: [0, 2, 0] },       // Hero — high angle
-  { at: 0.1, pos: [0, 4, 8], look: [0, 2, -2] },        // Descending
-  { at: 0.15, pos: [0, 2.5, 5], look: [0, 2, -4] },     // Entering gallery
-  { at: 0.25, pos: [0, 2, 0], look: [0, 1.8, -8] },     // Mid gallery
-  { at: 0.38, pos: [0, 2, -6], look: [0, 1.8, -14] },   // End gallery
-  { at: 0.42, pos: [0, 2, -10], look: [0, 3, -18] },    // Stats entrance
-  { at: 0.55, pos: [0, 2.5, -16], look: [0, 2.5, -24] },// Stats center
-  { at: 0.6, pos: [0, 2, -20], look: [0, 2, -28] },     // Arch entrance
-  { at: 0.7, pos: [0, 2, -26], look: [0, 2, -34] },     // Through arch
-  { at: 0.78, pos: [0, 2, -30], look: [0, 1.8, -38] },  // Quartiers
-  { at: 0.88, pos: [0, 2, -36], look: [0, 1.8, -44] },  // CTA
-  { at: 1.0, pos: [0, 2, -40], look: [0, 1.8, -48] },   // End
+const PATH = [
+  { at: 0.0,  pos: [0, 2.5, 14],   look: [0, 2, 0] },
+  { at: 0.08, pos: [0, 2, 8],      look: [0, 1.8, 0] },
+  { at: 0.12, pos: [0, 1.8, 5],    look: [0, 1.6, -2] },
+  { at: 0.18, pos: [-1, 1.8, 2],   look: [-3.5, 1.8, 0] },
+  { at: 0.28, pos: [0, 1.8, -1],   look: [3.5, 1.8, -3] },
+  { at: 0.38, pos: [1, 1.8, -4],   look: [-3.5, 1.8, -6] },
+  { at: 0.48, pos: [0, 1.8, -7],   look: [3.5, 1.8, -9] },
+  { at: 0.58, pos: [-0.5, 1.8, -10], look: [0, 1.8, -14] },
+  { at: 0.68, pos: [0, 1.8, -13],  look: [0, 2, -16] },
+  { at: 0.78, pos: [0, 2, -16],    look: [0, 2, -20] },
+  { at: 0.88, pos: [0, 1.8, -19],  look: [0, 1.6, -23] },
+  { at: 1.0,  pos: [0, 1.8, -22],  look: [0, 1.6, -26] },
 ];
 
-function getInterpolated(progress) {
-  let a = CAMERA_PATH[0];
-  let b = CAMERA_PATH[CAMERA_PATH.length - 1];
+function interpolate(progress) {
+  let a = PATH[0];
+  let b = PATH[PATH.length - 1];
 
-  for (let i = 0; i < CAMERA_PATH.length - 1; i++) {
-    if (progress >= CAMERA_PATH[i].at && progress <= CAMERA_PATH[i + 1].at) {
-      a = CAMERA_PATH[i];
-      b = CAMERA_PATH[i + 1];
+  for (let i = 0; i < PATH.length - 1; i++) {
+    if (progress >= PATH[i].at && progress <= PATH[i + 1].at) {
+      a = PATH[i];
+      b = PATH[i + 1];
       break;
     }
   }
 
   const t = a.at === b.at ? 0 : (progress - a.at) / (b.at - a.at);
-  // Smooth step easing
   const ease = t * t * (3 - 2 * t);
 
   return {
@@ -45,24 +49,21 @@ function getInterpolated(progress) {
   };
 }
 
-const _targetPos = new THREE.Vector3();
-const _targetLook = new THREE.Vector3();
-const _currentLook = new THREE.Vector3();
+const _tPos = new THREE.Vector3();
+const _tLook = new THREE.Vector3();
 
 export default function CameraRig({ progress = 0, reducedMotion = false }) {
   const { camera } = useThree();
   const lookRef = useRef(new THREE.Vector3(0, 2, 0));
 
   useFrame(() => {
-    const { pos, look } = getInterpolated(progress);
+    const { pos, look } = interpolate(progress);
+    _tPos.set(...pos);
+    _tLook.set(...look);
 
-    _targetPos.set(...pos);
-    _targetLook.set(...look);
-
-    const lerpSpeed = reducedMotion ? 1 : 0.06;
-
-    camera.position.lerp(_targetPos, lerpSpeed);
-    lookRef.current.lerp(_targetLook, lerpSpeed);
+    const speed = reducedMotion ? 1 : 0.07;
+    camera.position.lerp(_tPos, speed);
+    lookRef.current.lerp(_tLook, speed);
     camera.lookAt(lookRef.current);
   });
 
